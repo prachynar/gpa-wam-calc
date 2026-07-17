@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPA / WAM Calculator</title>
+<style>
+:root{
+  --bg: #FFFFFF;
+  --bg-2: #FAFAFA;
+  --bg-3: #F1F1F1;
+  --line: #D8D8D8;
+  --line-strong: #000000;
+  --ink: #000000;
+  --ink-soft: #555555;
+  --ink-faint: #999999;
+  --white: #FFFFFF;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --radius: 2px;
+}
+
+*{ box-sizing: border-box; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+html,body{
+  margin:0; padding:0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body{ min-height: 100vh; }
+
+::selection{ background: var(--ink); color: var(--white); }
+
+button{ font-family: inherit; cursor: pointer; }
+input{ font-family: inherit; }
+
+.app{
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+
+/* ---------- Header ---------- */
+.masthead{
+  border-bottom: 2px solid var(--line-strong);
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  position: relative;
+}
+.masthead-top{
+  display:flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+}
+.masthead-title{
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  letter-spacing: 0.01em;
+  margin: 0;
+  color: var(--ink);
+}
+.masthead-sub{
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Summary ---------- */
+.summary{
+  display:flex; gap: 14px; flex-wrap: wrap; align-items: stretch;
+  margin-top: 18px;
+}
+.stamp{
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  background: var(--white);
+  min-width: 150px;
+  position: relative;
+}
+.stamp-label{
+  font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.stamp-value{
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-weight: 700; font-size: 34px; color: var(--ink); line-height: 1;
+}
+.stamp-value small{ font-size: 15px; font-weight: 500; color: var(--ink-soft); }
+.goal-stamp, .scale-stamp{
+  min-width: 220px; flex: 1 1 240px; max-width: 320px;
+}
+.goal-controls{
+  display:flex; align-items:center; gap: 8px; flex-wrap: wrap;
+}
+.seg.small button{ padding: 5px 10px; font-size: 11.5px; }
+.goal-req-text{
+  margin-top: 8px; font-size: 12px; color: var(--ink-soft); line-height: 1.4;
+}
+.txt-input:disabled{ background: var(--bg-3); color: var(--ink-faint); cursor: not-allowed; }
+.mode-toggle-label{ font-size: 11.5px; color: var(--ink-soft); letter-spacing: .06em; }
+.seg{
+  display:flex; border: 1px solid var(--line-strong); border-radius: 20px; overflow:hidden;
+}
+.seg button{
+  border: none; background: transparent; padding: 7px 14px; font-size: 12.5px; color: var(--ink);
+  font-weight: 500;
+}
+.seg button.active{ background: var(--ink); color: var(--white); }
+
+/* ---------- Semester ---------- */
+.semester{
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-top: 22px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.semester-header{
+  display:flex; align-items:center; gap: 12px; padding: 14px 18px;
+  background: var(--ink);
+  color: var(--white);
+}
+.semester-header input.sem-name{
+  background: transparent; border: none; border-bottom: 1px dashed rgba(255,255,255,0.4);
+  color: var(--white); font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 19px; font-weight: 700;
+  padding: 2px 2px; width: 220px; max-width: 40vw;
+}
+.semester-header input.sem-name:focus{ outline: none; border-bottom-color: var(--white); }
+.semester-meta{
+  margin-left: auto; display:flex; align-items:center; gap: 16px; font-size: 12.5px;
+}
+.semester-meta .m{ text-align:right; }
+.semester-meta .m .v{ font-size: 15px; font-weight: 600; }
+.semester-meta .m .l{ font-size: 9.5px; letter-spacing: .06em; opacity: 0.75; }
+.icon-btn{
+  background: transparent; border: 1px solid rgba(255,255,255,0.5); color: var(--white);
+  border-radius: 50%; width: 26px; height: 26px; display:flex; align-items:center; justify-content:center; font-size: 14px; line-height:1;
+}
+.icon-btn:hover{ background: rgba(255,255,255,0.15); }
+.collapse-btn{
+  background: transparent; border: none; color: var(--white); font-size: 14px; padding: 2px 6px;
+}
+
+.semester-body{
+  padding: 6px 18px 18px;
+}
+.semester-body.collapsed{ display:none; }
+
+/* ---------- Subject ---------- */
+.subject{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ink);
+  border-radius: var(--radius);
+  margin-top: 16px;
+  padding: 14px 16px 16px;
+}
+.subject-top{
+  display:flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+}
+.field-inline{ display:flex; flex-direction: column; gap: 3px; }
+.field-inline label{ font-size: 9.5px; letter-spacing: .06em; color: var(--ink-faint); }
+.subject-name{
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-weight: 700; font-size: 18px; border: none; border-bottom: 1px solid transparent;
+  padding: 2px 0; min-width: 160px; background: transparent; color: var(--ink);
+}
+.subject-name:focus{ outline:none; border-bottom-color: var(--ink); }
+.subject-name::placeholder{ color: var(--ink-faint); font-weight: 400; }
+
+.txt-input{
+  border: 1px solid var(--line); border-radius: 2px; padding: 5px 7px; font-size: 13.5px;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif; background: var(--bg-2); color: var(--ink); width: 64px;
+}
+.txt-input:focus{ outline: 2px solid var(--ink); outline-offset: 1px; border-color: var(--ink); }
+.txt-input.wide{ width: 90px; }
+
+.subject-actions{ margin-left: auto; display:flex; gap: 8px; align-items:center; }
+.link-btn{
+  background: none; border: none; color: var(--ink-soft); font-size: 12px; text-decoration: underline;
+  padding: 2px;
+}
+.link-btn:hover{ color: var(--ink); }
+.link-btn.danger{ color: var(--ink-soft); }
+
+.subject-status{
+  display:flex; align-items:center; gap: 10px; margin-top: 10px; flex-wrap: wrap;
+}
+.grade-badge{
+  font-weight: 600; font-size: 13px;
+  padding: 4px 10px; border-radius: 20px; border: 1px solid var(--ink); color: var(--ink); background: var(--white);
+}
+.badge-hd{ color: var(--ink); background: var(--bg-3); border-color: var(--ink); font-weight: 700; }
+.badge-mid{ color: var(--ink); background: var(--white); }
+.badge-fail{ color: var(--ink); background: var(--white); border-style: dashed; }
+.badge-none{ color: var(--ink-faint); background: var(--bg-2); border-color: var(--line); }
+.weight-warning{
+  font-size: 11.5px; color: var(--ink); background: var(--bg-3); padding: 3px 8px; border-radius: 3px; border: 1px dashed var(--line-strong);
+}
+
+/* ---------- Assessments table ---------- */
+.assess-table{ margin-top: 14px; }
+.assess-row{
+  display:grid;
+  grid-template-columns: 1.6fr 0.7fr 0.9fr 0.9fr 0.9fr 28px;
+  gap: 8px; align-items:center;
+  padding: 8px 0; border-top: 1px dashed var(--line);
+}
+.assess-row.head{
+  border-top: none; padding-top: 0; padding-bottom: 4px;
+  font-size: 9.5px; letter-spacing: .05em; color: var(--ink-faint);
+}
+.assess-row input.a-name{
+  border: none; border-bottom: 1px solid transparent; background: transparent; font-size: 13.5px; padding: 4px 2px; width: 100%;
+}
+.assess-row input.a-name:focus{ outline: none; border-bottom-color: var(--ink); }
+.assess-row .result{
+  font-size: 13px; text-align:right; padding-right: 4px; font-weight: 600;
+}
+.result.good{ color: var(--ink); }
+.result.bad{ color: var(--ink-soft); text-decoration: underline; text-decoration-style: dashed; }
+.remove-row{
+  background: none; border: none; color: var(--ink-faint); font-size: 15px; width: 24px; height: 24px; border-radius: 50%;
+}
+.remove-row:hover{ color: var(--ink); background: var(--bg-3); }
+
+.margin-note{
+  grid-column: 1 / -1;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  line-height: 1.3;
+  margin: -2px 0 4px 4px;
+  display:flex; align-items: center; gap: 6px;
+  border-left: 2px solid var(--ink);
+  padding-left: 8px;
+}
+.margin-note::before{ content: '→'; font-size: 12px; opacity: .8; }
+.margin-note.ok{ color: var(--ink); }
+.margin-note.impossible{ color: var(--ink); font-weight: 700; }
+
+.add-assess{
+  margin-top: 8px;
+  background: transparent; border: 1px dashed var(--line); color: var(--ink-soft);
+  padding: 6px 10px; border-radius: 3px; font-size: 12.5px; width: 100%; text-align: left;
+}
+.add-assess:hover{ border-color: var(--ink); color: var(--ink); }
+
+.goal-row{
+  display:flex; align-items:center; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.goal-row .field-inline label{ color: var(--ink-soft); }
+.goal-summary{
+  font-size: 12.5px; color: var(--ink-soft);
+}
+.goal-summary strong{ color: var(--ink); }
+
+.add-subject-btn{
+  margin-top: 14px;
+  background: var(--white); border: 1px dashed var(--ink); color: var(--ink);
+  padding: 8px 14px; border-radius: 3px; font-size: 13px; font-weight: 500; width: 100%;
+}
+.add-subject-btn:hover{ background: var(--bg-3); }
+
+.add-semester-btn{
+  margin-top: 24px;
+  background: var(--ink); color: var(--white); border: none;
+  padding: 11px 20px; border-radius: 3px; font-size: 14px; font-weight: 600;
+  box-shadow: var(--shadow);
+}
+.add-semester-btn:hover{ background: #222222; }
+
+/* ---------- Empty state ---------- */
+.empty{
+  text-align:center; padding: 50px 20px; color: var(--ink-soft);
+  border: 1px dashed var(--line); border-radius: var(--radius); margin-top: 20px; background: var(--bg-2);
+}
+.empty .big{ font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-weight: 700; font-size: 20px; color: var(--ink); margin-bottom: 6px; }
+
+/* ---------- Settings ---------- */
+.settings{
+  margin-top: 30px; border-top: 2px solid var(--line-strong); padding-top: 16px;
+}
+.settings summary{
+  cursor: pointer; font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 15px; color: var(--ink); font-weight: 700;
+  list-style: none; display:flex; align-items:center; gap: 6px;
+}
+.settings summary::-webkit-details-marker{ display:none; }
+.settings summary::before{ content: '▸'; font-size: 12px; transition: transform 0.15s; }
+.settings[open] summary::before{ transform: rotate(90deg); }
+.settings-body{ padding: 14px 2px 6px; }
+.scale-row{
+  display:grid; grid-template-columns: 100px 100px 1fr 24px; gap: 8px; align-items:center; margin-bottom: 8px;
+}
+.scale-row input{ }
+.settings-note{ font-size: 12px; color: var(--ink-soft); margin: 10px 0; line-height: 1.5; }
+.danger-zone{ margin-top: 18px; }
+.reset-btn{
+  background: var(--white); border: 1px solid var(--ink); color: var(--ink); padding: 7px 12px;
+  border-radius: 3px; font-size: 12.5px;
+}
+.reset-btn:hover{ background: var(--bg-3); }
+
+.footer-note{
+  text-align:center; margin-top: 36px; font-size: 11.5px; color: var(--ink-faint); line-height: 1.6;
+}
+
+@media (max-width: 640px){
+  .assess-row{ grid-template-columns: 1.4fr 0.6fr 0.8fr 0.8fr 0.8fr 24px; gap: 5px; }
+  .assess-row input.a-name{ font-size: 12.5px; }
+  .txt-input{ width: 52px; padding: 5px 4px; }
+  .masthead-title{ font-size: 26px; }
+  .stamp-value{ font-size: 26px; }
+  .semester-meta{ display:none; }
+}
+
+.sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+button:focus-visible, input:focus-visible{
+  outline: 2px solid var(--ink); outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- State ----------------
+  var state = {
+    semesters: [],
+    mode: 'current',
+    goalType: null,  // null | 'wam' | 'gpa'
+    goalValue: null,
+    gpaScaleType: '7' // '7' | '4'
+  };
+  var SCALE_7 = [
+    { min: 85, points: 7, label: 'HD' },
+    { min: 75, points: 6, label: 'D'  },
+    { min: 65, points: 5, label: 'C'  },
+    { min: 50, points: 4, label: 'P'  },
+    { min: 0,  points: 0, label: 'F'  }
+  ];
+  var SCALE_4 = [
+    { min: 90, points: 4, label: 'A' },
+    { min: 80, points: 3, label: 'B' },
+    { min: 70, points: 2, label: 'C' },
+    { min: 60, points: 1, label: 'D' },
+    { min: 0,  points: 0, label: 'F' }
+  ];
+  var gradeScale = SCALE_7.slice();
+  var collapsedSemesters = {};
+  var STORAGE_KEY = 'ledger-data-v1';
+  var SCALE_KEY = 'ledger-gradescale-v1';
+  var loaded = false;
+  var scaleCustomized = false; // becomes true once the user edits bands manually
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+  // ---------------- Persistence ----------------
+  async function loadAll(){
+    try{
+      var res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        var parsed = JSON.parse(res.value);
+        if(parsed && Array.isArray(parsed.semesters)){
+          state.semesters = parsed.semesters;
+          state.goalType = parsed.goalType || null;
+          state.goalValue = (parsed.goalValue === undefined) ? null : parsed.goalValue;
+          state.gpaScaleType = parsed.gpaScaleType === '4' ? '4' : '7';
+        }
+      }
+    }catch(e){ /* no existing data */ }
+    try{
+      var res2 = await window.storage.get(SCALE_KEY, false);
+      if(res2 && res2.value){
+        var parsed2 = JSON.parse(res2.value);
+        if(parsed2 && Array.isArray(parsed2.gradeScale) && parsed2.gradeScale.length){
+          gradeScale = parsed2.gradeScale;
+          scaleCustomized = !!parsed2.customized;
+        }
+      }
+    }catch(e){
+      gradeScale = state.gpaScaleType === '4' ? SCALE_4.slice() : SCALE_7.slice();
+    }
+
+    if(state.semesters.length === 0){
+      seedExample();
+    }
+    loaded = true;
+    render();
+  }
+
+  var saveTimer = null;
+  function persist(){
+    if(saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(function(){
+      window.storage.set(STORAGE_KEY, JSON.stringify({ semesters: state.semesters, goalType: state.goalType, goalValue: state.goalValue, gpaScaleType: state.gpaScaleType }), false).catch(function(){});
+    }, 200);
+  }
+  function persistScale(){
+    window.storage.set(SCALE_KEY, JSON.stringify({ gradeScale: gradeScale, customized: scaleCustomized }), false).catch(function(){});
+  }
+
+  function seedExample(){
+    var semId = uid();
+    var subId = uid();
+    state.semesters.push({
+      id: semId,
+      name: 'Semester 1',
+      subjects: [
+        {
+          id: subId,
+          name: 'Subject Name',
+          credits: 6,
+          goal: 75,
+          assessments: [
+            { id: uid(), name: 'Assessment 1', weight: 10, totalMarks: 20, scored: 17 },
+            { id: uid(), name: 'Assessment 2', weight: 30, totalMarks: 100, scored: 68 },
+            { id: uid(), name: 'Assessment 3', weight: 60, totalMarks: 100, scored: null }
+          ]
+        }
+      ]
+    });
+  }
+
+  // ---------------- Calculations ----------------
+  function gradePoint(mark){
+    for(var i=0;i<gradeScale.length;i++){
+      if(mark >= gradeScale[i].min) return gradeScale[i];
+    }
+    return gradeScale[gradeScale.length-1];
+  }
+
+  function calcSubject(subject){
+    var entered = [], remaining = [];
+    var achievedWeight = 0, achievedPoints = 0, totalWeight = 0;
+    (subject.assessments || []).forEach(function(a){
+      var w = Number(a.weight) || 0;
+      totalWeight += w;
+      if(a.scored !== null && a.scored !== '' && a.scored !== undefined && Number(a.totalMarks) > 0){
+        entered.push(a);
+        achievedWeight += w;
+        achievedPoints += (Number(a.scored) / Number(a.totalMarks)) * w;
+      } else {
+        remaining.push(a);
+      }
+    });
+    var remainingWeight = totalWeight - achievedWeight;
+    var fullyEntered = remaining.length === 0 && (subject.assessments||[]).length > 0;
+
+    var currentMark = achievedWeight > 0 ? (achievedPoints / achievedWeight) * 100 : null;
+
+    var goal = (subject.goal !== null && subject.goal !== '' && subject.goal !== undefined) ? Number(subject.goal) : null;
+    var requiredAvgPercent = null;
+    var goalStatus = null; // 'secured' | 'ontrack' | 'atrisk' | 'impossible' | null
+    if(goal !== null && remainingWeight > 0){
+      var neededPoints = goal - achievedPoints;
+      requiredAvgPercent = (neededPoints / remainingWeight) * 100;
+      if(requiredAvgPercent <= 0) goalStatus = 'secured';
+      else if(requiredAvgPercent > 100) goalStatus = 'impossible';
+      else goalStatus = 'ontrack';
+    } else if(goal !== null && remainingWeight <= 0){
+      goalStatus = achievedPoints >= goal ? 'secured' : 'impossible';
+    }
+
+    var projectedMark;
+    if(fullyEntered){ projectedMark = achievedPoints; }
+    else if(goal !== null){ projectedMark = goal; }
+    else if(currentMark !== null){ projectedMark = currentMark; }
+    else { projectedMark = null; }
+
+    return {
+      entered: entered, remaining: remaining,
+      achievedWeight: achievedWeight, achievedPoints: achievedPoints, totalWeight: totalWeight,
+      remainingWeight: remainingWeight, fullyEntered: fullyEntered,
+      currentMark: currentMark, goal: goal, requiredAvgPercent: requiredAvgPercent,
+      goalStatus: goalStatus, projectedMark: projectedMark
+    };
+  }
+
+  function overallStats(mode){
+    var totalCredits = 0, weightedMarkSum = 0, weightedPointSum = 0, countedSubjects = 0;
+    state.semesters.forEach(function(sem){
+      sem.subjects.forEach(function(sub){
+        var c = Number(sub.credits) || 0;
+        var calc = calcSubject(sub);
+        var mark = mode === 'projected' ? calc.projectedMark : calc.currentMark;
+        if(mark === null || c <= 0) return;
+        totalCredits += c;
+        weightedMarkSum += mark * c;
+        weightedPointSum += gradePoint(mark).points * c;
+        countedSubjects++;
+      });
+    });
+    return {
+      wam: totalCredits > 0 ? weightedMarkSum / totalCredits : null,
+      gpa: totalCredits > 0 ? weightedPointSum / totalCredits : null,
+      totalCredits: totalCredits, countedSubjects: countedSubjects
+    };
+  }
+
+  function semesterStats(sem, mode){
+    var totalCredits = 0, weightedMarkSum = 0, weightedPointSum = 0;
+    sem.subjects.forEach(function(sub){
+      var c = Number(sub.credits) || 0;
+      var calc = calcSubject(sub);
+      var mark = mode === 'projected' ? calc.projectedMark : calc.currentMark;
+      if(mark === null || c <= 0) return;
+      totalCredits += c;
+      weightedMarkSum += mark * c;
+      weightedPointSum += gradePoint(mark).points * c;
+    });
+    return {
+      wam: totalCredits > 0 ? weightedMarkSum / totalCredits : null,
+      gpa: totalCredits > 0 ? weightedPointSum / totalCredits : null
+    };
+  }
+
+  // Works out what average you need across everything not yet finished
+  // to land on an overall wam or gpa target.
+  function goalRequirement(){
+    if(!state.goalType || state.goalValue === null || state.goalValue === '' || isNaN(state.goalValue)) return null;
+
+    var totalCredits = 0, doneCredits = 0, doneMarkPoints = 0, doneGradePoints = 0;
+    var remainingCredits = 0, remainingSubjects = 0;
+
+    state.semesters.forEach(function(sem){
+      sem.subjects.forEach(function(sub){
+        var c = Number(sub.credits) || 0;
+        if(c <= 0) return;
+        totalCredits += c;
+        var calc = calcSubject(sub);
+        if(calc.fullyEntered){
+          doneCredits += c;
+          doneMarkPoints += calc.achievedPoints * c;
+          doneGradePoints += gradePoint(calc.achievedPoints).points * c;
+        } else {
+          remainingCredits += c;
+          remainingSubjects++;
+        }
+      });
+    });
+
+    if(totalCredits <= 0) return null;
+
+    if(remainingCredits <= 0){
+      if(state.goalType === 'wam'){
+        var curWam = doneMarkPoints / totalCredits;
+        return { done: true, type: 'wam', achieved: curWam, met: curWam >= state.goalValue };
+      } else {
+        var curGpa = doneGradePoints / totalCredits;
+        return { done: true, type: 'gpa', achieved: curGpa, met: curGpa >= state.goalValue };
+      }
+    }
+
+    if(state.goalType === 'wam'){
+      var neededPoints = state.goalValue * totalCredits - doneMarkPoints;
+      var requiredAvgMark = neededPoints / remainingCredits;
+      return {
+        done: false, type: 'wam', requiredAvgMark: requiredAvgMark,
+        remainingCredits: remainingCredits, remainingSubjects: remainingSubjects,
+        impossible: requiredAvgMark > 100, secured: requiredAvgMark <= 0
+      };
+    } else {
+      var neededGP = state.goalValue * totalCredits - doneGradePoints;
+      var requiredAvgPoints = neededGP / remainingCredits;
+      var maxPoints = Math.max.apply(null, gradeScale.map(function(g){ return g.points; }));
+      var sorted = gradeScale.slice().sort(function(a,b){ return a.min - b.min; });
+      var band = null;
+      for(var i=0;i<sorted.length;i++){
+        if(sorted[i].points >= requiredAvgPoints){ band = sorted[i]; break; }
+      }
+      return {
+        done: false, type: 'gpa', requiredAvgPoints: requiredAvgPoints, requiredBand: band,
+        remainingCredits: remainingCredits, remainingSubjects: remainingSubjects,
+        impossible: requiredAvgPoints > maxPoints, secured: requiredAvgPoints <= 0
+      };
+    }
+  }
+
+  function goalMessage(){
+    var req = goalRequirement();
+    if(!req) return 'Set a target above to see what you need going forward.';
+    var subjWord = function(n){ return n + ' subject' + (n === 1 ? '' : 's'); };
+    if(req.done){
+      return req.met
+        ? 'Goal met — every subject is fully graded and your target is reached.'
+        : 'Every subject is fully graded, but this target was not reached.';
+    }
+    if(req.type === 'wam'){
+      if(req.secured) return 'Goal secured — even 0% on what\'s left keeps you at target.';
+      if(req.impossible) return 'No longer reachable — would need over 100% average across the remaining '+req.remainingCredits+' credit points.';
+      return 'Need an average of '+fmt(req.requiredAvgMark,1)+'% across your remaining '+req.remainingCredits+' credit points ('+subjWord(req.remainingSubjects)+').';
+    } else {
+      if(req.secured) return 'Goal secured — even failing what\'s left keeps you at target.';
+      if(req.impossible) return 'No longer reachable across the remaining '+req.remainingCredits+' credit points.';
+      var bandText = req.requiredBand ? (req.requiredBand.label+' ('+fmt(req.requiredBand.min,0)+'%+)') : '—';
+      return 'Aim for at least '+bandText+' average across your remaining '+req.remainingCredits+' credit points ('+subjWord(req.remainingSubjects)+').';
+    }
+  }
+
+  function fmt(n, d){
+    if(n === null || n === undefined || isNaN(n)) return '—';
+    d = d === undefined ? 1 : d;
+    return Number(n).toFixed(d);
+  }
+
+  function esc(s){
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ---------------- Mutations ----------------
+  function addSemester(){
+    state.semesters.push({ id: uid(), name: 'New Semester', subjects: [] });
+    persist(); render();
+  }
+  function removeSemester(semId){
+    state.semesters = state.semesters.filter(function(s){ return s.id !== semId; });
+    persist(); render();
+  }
+  function addSubject(semId){
+    var sem = findSemester(semId);
+    if(!sem) return;
+    sem.subjects.push({ id: uid(), name: 'Subject Name', credits: 6, goal: null, assessments: [] });
+    persist(); render();
+  }
+  function removeSubject(semId, subId){
+    var sem = findSemester(semId);
+    if(!sem) return;
+    sem.subjects = sem.subjects.filter(function(s){ return s.id !== subId; });
+    persist(); render();
+  }
+  function addAssessment(semId, subId){
+    var sub = findSubject(semId, subId);
+    if(!sub) return;
+    var n = sub.assessments.length + 1;
+    sub.assessments.push({ id: uid(), name: 'Assessment ' + n, weight: 0, totalMarks: 100, scored: null });
+    persist(); render();
+  }
+  function removeAssessment(semId, subId, aId){
+    var sub = findSubject(semId, subId);
+    if(!sub) return;
+    sub.assessments = sub.assessments.filter(function(a){ return a.id !== aId; });
+    persist(); render();
+  }
+  function findSemester(semId){
+    return state.semesters.find(function(s){ return s.id === semId; });
+  }
+  function findSubject(semId, subId){
+    var sem = findSemester(semId);
+    if(!sem) return null;
+    return sem.subjects.find(function(s){ return s.id === subId; });
+  }
+  function findAssessment(semId, subId, aId){
+    var sub = findSubject(semId, subId);
+    if(!sub) return null;
+    return sub.assessments.find(function(a){ return a.id === aId; });
+  }
+
+  // ---------------- Rendering ----------------
+  var root = document.getElementById('app');
+
+  function gradeBadgeClass(points){
+    if(points >= 6) return 'badge-hd';
+    if(points >= 4) return 'badge-mid';
+    return 'badge-fail';
+  }
+
+  function renderAssessRow(sem, sub, a, calc){
+    var isEntered = a.scored !== null && a.scored !== '' && a.scored !== undefined && Number(a.totalMarks) > 0;
+    var resultPct = isEntered ? (Number(a.scored) / Number(a.totalMarks)) * 100 : null;
+    var resultClass = '';
+    if(resultPct !== null){
+      resultClass = resultPct >= 50 ? 'good' : 'bad';
+    }
+    var scoredVal = (a.scored === null || a.scored === undefined) ? '' : a.scored;
+
+    var row = ''+
+    '<div class="assess-row" data-a-id="'+a.id+'">'+
+      '<input class="a-name" type="text" placeholder="Assessment name" value="'+esc(a.name)+'" '+
+        'data-focus-id="name-'+a.id+'" data-field="name" data-a-id="'+a.id+'" data-action="update-assess">'+
+      '<input class="txt-input" type="text" inputmode="decimal" placeholder="wt %" value="'+esc(a.weight===0?0:(a.weight||''))+'" '+
+        'data-focus-id="weight-'+a.id+'" data-field="weight" data-a-id="'+a.id+'" data-action="update-assess" aria-label="Weight percent">'+
+      '<input class="txt-input" type="text" inputmode="decimal" placeholder="/ total" value="'+esc(a.totalMarks===0?0:(a.totalMarks||''))+'" '+
+        'data-focus-id="total-'+a.id+'" data-field="totalMarks" data-a-id="'+a.id+'" data-action="update-assess" aria-label="Total marks">'+
+      '<input class="txt-input" type="text" inputmode="decimal" placeholder="score" value="'+esc(scoredVal)+'" '+
+        'data-focus-id="scored-'+a.id+'" data-field="scored" data-a-id="'+a.id+'" data-action="update-assess" aria-label="Marks scored">'+
+      '<div class="result '+resultClass+'">'+(resultPct !== null ? fmt(resultPct,1)+'%' : '—')+'</div>'+
+      '<button class="remove-row" data-action="remove-assess" data-a-id="'+a.id+'" title="Remove assessment" aria-label="Remove assessment">×</button>';
+
+    // margin note for un-entered rows when a goal exists
+    if(!isEntered && calc.goal !== null){
+      if(calc.remainingWeight <= 0){
+        // shouldn't really happen since this row is 'remaining' by definition unless weight is 0
+      } else {
+        var reqPct = calc.requiredAvgPercent;
+        var reqRaw = (Number(a.totalMarks) > 0) ? (reqPct/100)*Number(a.totalMarks) : null;
+        var noteClass = 'margin-note';
+        var noteText = '';
+        if(reqPct <= 0){
+          noteClass += ' ok';
+          noteText = 'Goal secured — even 0% here keeps you at your target.';
+        } else if(reqPct > 100){
+          noteClass += ' impossible';
+          noteText = 'Target no longer reachable — would need '+fmt(reqPct,0)+'% here.';
+        } else {
+          noteText = 'Need '+fmt(reqPct,1)+'%'+(reqRaw!==null?' ('+fmt(reqRaw,1)+' / '+fmt(Number(a.totalMarks),0)+')':'')+' here to hit your goal of '+fmt(calc.goal,0)+'.';
+        }
+        row += '<div class="'+noteClass+'">'+noteText+'</div>';
+      }
+    }
+
+    row += '</div>';
+    return row;
+  }
+
+  function renderSubject(sem, sub){
+    var calc = calcSubject(sub);
+    var badgeHtml;
+    if(calc.currentMark !== null){
+      var gp = gradePoint(calc.currentMark);
+      badgeHtml = '<span class="grade-badge '+gradeBadgeClass(gp.points)+'">'+gp.label+' · '+gp.points.toFixed(1)+' pts · '+fmt(calc.currentMark,1)+'%</span>';
+    } else {
+      badgeHtml = '<span class="grade-badge badge-none">No marks yet</span>';
+    }
+
+    var weightWarning = '';
+    if(calc.totalWeight > 0 && Math.abs(calc.totalWeight - 100) > 0.5){
+      weightWarning = '<span class="weight-warning">Weights total '+fmt(calc.totalWeight,0)+'% (should be 100%)</span>';
+    }
+
+    var rowsHtml = '';
+    if(sub.assessments.length === 0){
+      rowsHtml = '<div style="font-size:12.5px;color:var(--ink-faint);padding:8px 0;">No assessments yet — add one below.</div>';
+    } else {
+      rowsHtml += '<div class="assess-row head"><div>Assessment</div><div>Weight</div><div>Out of</div><div>Scored</div><div style="text-align:right">Result</div><div></div></div>';
+      sub.assessments.forEach(function(a){
+        rowsHtml += renderAssessRow(sem, sub, a, calc);
+      });
+    }
+
+    var goalVal = (sub.goal === null || sub.goal === undefined) ? '' : sub.goal;
+    var goalSummary = '';
+    if(calc.goal !== null){
+      if(calc.fullyEntered){
+        goalSummary = calc.achievedPoints >= calc.goal
+          ? '<span style="color:var(--green-pass)">Final mark '+fmt(calc.achievedPoints,1)+'% meets your goal.</span>'
+          : '<span style="color:var(--red-pen)">Final mark '+fmt(calc.achievedPoints,1)+'% fell short of your goal.</span>';
+      } else if(calc.goalStatus === 'impossible'){
+        goalSummary = '<span style="color:var(--red-pen)">Goal is no longer mathematically reachable.</span>';
+      } else if(calc.goalStatus === 'secured'){
+        goalSummary = '<span style="color:var(--green-pass)">On track — goal secured with marks so far.</span>';
+      } else {
+        goalSummary = 'Need <strong>'+fmt(calc.requiredAvgPercent,1)+'%</strong> average on remaining '+fmt(calc.remainingWeight,0)+'% of weight.';
+      }
+    }
+
+    return ''+
+    '<div class="subject" data-sub-id="'+sub.id+'">'+
+      '<div class="subject-top">'+
+        '<div class="field-inline" style="flex:1;min-width:160px;">'+
+          '<label class="sr-only">Subject name</label>'+
+          '<input class="subject-name" type="text" placeholder="Subject name" value="'+esc(sub.name)+'" '+
+            'data-focus-id="subname-'+sub.id+'" data-field="name" data-sub-id="'+sub.id+'" data-action="update-subject">'+
+        '</div>'+
+        '<div class="field-inline">'+
+          '<label for="credits-'+sub.id+'">Credit pts</label>'+
+          '<input id="credits-'+sub.id+'" class="txt-input" type="text" inputmode="decimal" value="'+esc(sub.credits===0?0:(sub.credits||''))+'" '+
+            'data-focus-id="credits-'+sub.id+'" data-field="credits" data-sub-id="'+sub.id+'" data-action="update-subject">'+
+        '</div>'+
+        '<div class="subject-actions">'+
+          '<button class="link-btn danger" data-action="remove-subject" data-sub-id="'+sub.id+'">remove</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="subject-status">'+badgeHtml+weightWarning+'</div>'+
+      '<div class="assess-table">'+rowsHtml+'</div>'+
+      '<button class="add-assess" data-action="add-assess" data-sub-id="'+sub.id+'">+ Add assessment</button>'+
+      '<div class="goal-row">'+
+        '<div class="field-inline">'+
+          '<label for="goal-'+sub.id+'">Mark goal (/100)</label>'+
+          '<input id="goal-'+sub.id+'" class="txt-input wide" type="text" inputmode="decimal" placeholder="e.g. 75" value="'+esc(goalVal)+'" '+
+            'data-focus-id="goal-'+sub.id+'" data-field="goal" data-sub-id="'+sub.id+'" data-action="update-subject">'+
+        '</div>'+
+        '<div class="goal-summary">'+goalSummary+'</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function renderSemester(sem){
+    var isCollapsed = !!collapsedSemesters[sem.id];
+    var stats = semesterStats(sem, state.mode);
+    var subjectsHtml = sem.subjects.map(function(sub){ return renderSubject(sem, sub); }).join('');
+
+    return ''+
+    '<div class="semester" data-sem-id="'+sem.id+'">'+
+      '<div class="semester-header">'+
+        '<button class="collapse-btn" data-action="toggle-collapse" data-sem-id="'+sem.id+'" aria-label="Toggle semester">'+(isCollapsed?'▸':'▾')+'</button>'+
+        '<input class="sem-name" type="text" value="'+esc(sem.name)+'" '+
+          'data-focus-id="semname-'+sem.id+'" data-field="name" data-sem-id="'+sem.id+'" data-action="update-semester">'+
+        '<div class="semester-meta">'+
+          '<div class="m"><div class="v">'+fmt(stats.wam,1)+'</div><div class="l">WAM</div></div>'+
+          '<div class="m"><div class="v">'+fmt(stats.gpa,2)+'</div><div class="l">GPA</div></div>'+
+        '</div>'+
+        '<button class="icon-btn" data-action="remove-semester" data-sem-id="'+sem.id+'" title="Remove semester" aria-label="Remove semester">×</button>'+
+      '</div>'+
+      '<div class="semester-body'+(isCollapsed?' collapsed':'')+'">'+
+        subjectsHtml+
+        '<button class="add-subject-btn" data-action="add-subject" data-sem-id="'+sem.id+'">+ Add subject</button>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function renderScaleSettings(){
+    var rows = gradeScale.map(function(g, i){
+      return '<div class="scale-row" data-scale-idx="'+i+'">'+
+        '<input class="txt-input wide" type="text" inputmode="decimal" value="'+esc(g.min)+'" data-scale-field="min" data-scale-idx="'+i+'" data-action="update-scale" aria-label="Minimum mark">'+
+        '<input class="txt-input wide" type="text" inputmode="decimal" value="'+esc(g.points)+'" data-scale-field="points" data-scale-idx="'+i+'" data-action="update-scale" aria-label="Grade points">'+
+        '<input class="txt-input wide" type="text" value="'+esc(g.label)+'" data-scale-field="label" data-scale-idx="'+i+'" data-action="update-scale" aria-label="Grade label">'+
+        '<button class="remove-row" data-action="remove-scale-row" data-scale-idx="'+i+'" title="Remove band">×</button>'+
+      '</div>';
+    }).join('');
+    return ''+
+    '<div class="settings-body">'+
+      '<p class="settings-note">These bands are set from the GPA scale chosen above ('+(state.gpaScaleType==='4'?'out of 4':'out of 7')+'). Your university may use different cut-offs, so adjust the minimum mark, points, and label for each band below as needed.</p>'+
+      '<div class="scale-row" style="font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);">'+
+        '<div>Min mark</div><div>Points</div><div>Label</div><div></div>'+
+      '</div>'+
+      rows+
+      '<button class="link-btn" data-action="add-scale-row">+ Add band</button>'+
+      '<div class="danger-zone">'+
+        '<button class="reset-btn" data-action="reset-all">Clear all data</button>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function render(){
+    if(!loaded){
+      root.innerHTML = '<div class="empty"><div class="big">Opening the ledger…</div></div>';
+      return;
+    }
+    // capture focus
+    var active = document.activeElement;
+    var focusId = active && active.dataset ? active.dataset.focusId : null;
+    var selStart = null, selEnd = null;
+    if(active && typeof active.selectionStart === 'number'){
+      selStart = active.selectionStart; selEnd = active.selectionEnd;
+    }
+
+    var overall = overallStats(state.mode);
+
+    var semestersHtml = state.semesters.length
+      ? state.semesters.map(renderSemester).join('')
+      : '<div class="empty"><div class="big">Your ledger is empty</div>Add a semester to start tracking subjects, assessments, and mark goals.</div>';
+
+    var goalVal = (state.goalValue === null || state.goalValue === undefined) ? '' : state.goalValue;
+    var gpaMax = state.gpaScaleType === '4' ? '4' : '7';
+    var goalCardHtml = ''+
+      '<div class="stamp goal-stamp">'+
+        '<div class="stamp-label">Target</div>'+
+        '<div class="goal-controls">'+
+          '<div class="seg small">'+
+            '<button data-action="set-goal-type" data-goaltype="wam" class="'+(state.goalType==='wam'?'active':'')+'">WAM</button>'+
+            '<button data-action="set-goal-type" data-goaltype="gpa" class="'+(state.goalType==='gpa'?'active':'')+'">GPA</button>'+
+          '</div>'+
+          '<input class="txt-input wide" type="text" inputmode="decimal" placeholder="'+(state.goalType==='gpa'?'e.g. 6':'e.g. 75')+'" value="'+esc(goalVal)+'" '+
+            'data-focus-id="overall-goal" data-action="update-overall-goal"'+(state.goalType?'':' disabled')+'>'+
+          (state.goalType ? '<button class="link-btn" data-action="clear-goal">Clear</button>' : '')+
+        '</div>'+
+        '<div class="goal-req-text">'+esc(goalMessage())+'</div>'+
+      '</div>';
+
+    var scaleCardHtml = ''+
+      '<div class="stamp scale-stamp">'+
+        '<div class="stamp-label">GPA scale</div>'+
+        '<div class="goal-controls">'+
+          '<div class="seg small">'+
+            '<button data-action="set-gpa-scale" data-scale="7" class="'+(state.gpaScaleType==='7'?'active':'')+'">Out of 7</button>'+
+            '<button data-action="set-gpa-scale" data-scale="4" class="'+(state.gpaScaleType==='4'?'active':'')+'">Out of 4</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="goal-req-text">Choose the scale your university reports GPA on.</div>'+
+      '</div>';
+
+    var html = ''+
+    '<header class="masthead">'+
+      '<div class="masthead-top">'+
+        '<div>'+
+          '<h1 class="masthead-title">GPA / WAM Calculator</h1>'+
+        '</div>'+
+      '</div>'+
+      '<div class="summary">'+
+        '<div class="stamp"><div class="stamp-label">Overall WAM</div><div class="stamp-value">'+fmt(overall.wam,1)+'<small> / 100</small></div></div>'+
+        '<div class="stamp"><div class="stamp-label">Overall GPA</div><div class="stamp-value">'+fmt(overall.gpa,2)+'<small> / '+gpaMax+'</small></div></div>'+
+        goalCardHtml+
+        scaleCardHtml+
+      '</div>'+
+    '</header>'+
+    semestersHtml+
+    '<button class="add-semester-btn" data-action="add-semester">+ Add semester</button>'+
+    '<details class="settings">'+
+      '<summary>Grading scale settings</summary>'+
+      renderScaleSettings()+
+    '</details>'+
+    '<div class="footer-note">Marks are saved automatically to your account and only visible to you. Overall WAM and GPA are calculated from the marks you\'ve entered so far, weighted by credit points.</div>';
+
+    root.innerHTML = html;
+
+    if(focusId){
+      var el = root.querySelector('[data-focus-id="'+CSS.escape(focusId)+'"]');
+      if(el){
+        el.focus();
+        if(selStart !== null && el.setSelectionRange){
+          try{ el.setSelectionRange(selStart, selEnd); }catch(e){}
+        }
+      }
+    }
+  }
+
+  // ---------------- Event delegation ----------------
+  root.addEventListener('input', function(e){
+    var t = e.target;
+    var action = t.dataset.action;
+    if(action === 'update-semester'){
+      var sem = findSemester(t.dataset.semId);
+      if(sem){ sem[t.dataset.field] = t.value; persist(); }
+    } else if(action === 'update-subject'){
+      var sub = findSubject(closestSemId(t), t.dataset.subId);
+      if(sub){
+        var field = t.dataset.field;
+        if(field === 'name'){ sub.name = t.value; }
+        else if(field === 'credits'){ sub.credits = t.value === '' ? '' : Number(t.value); }
+        else if(field === 'goal'){ sub.goal = t.value === '' ? null : Number(t.value); }
+        persist(); renderPreserving();
+      }
+    } else if(action === 'update-assess'){
+      var semId = closestSemId(t);
+      var subId = closestSubId(t);
+      var a = findAssessment(semId, subId, t.dataset.aId);
+      if(a){
+        var f = t.dataset.field;
+        if(f === 'name'){ a.name = t.value; }
+        else if(f === 'weight'){ a.weight = t.value === '' ? '' : Number(t.value); }
+        else if(f === 'totalMarks'){ a.totalMarks = t.value === '' ? '' : Number(t.value); }
+        else if(f === 'scored'){ a.scored = t.value === '' ? null : Number(t.value); }
+        persist(); renderPreserving();
+      }
+    } else if(action === 'update-scale'){
+      var idx = Number(t.dataset.scaleIdx);
+      var f2 = t.dataset.scaleField;
+      if(gradeScale[idx]){
+        if(f2 === 'label'){ gradeScale[idx].label = t.value; }
+        else { gradeScale[idx][f2] = t.value === '' ? 0 : Number(t.value); }
+        gradeScale.sort(function(a,b){ return b.min - a.min; });
+        scaleCustomized = true;
+        persistScale(); renderPreserving();
+      }
+    } else if(action === 'update-overall-goal'){
+      state.goalValue = t.value === '' ? null : Number(t.value);
+      persist(); renderPreserving();
+    }
+  });
+
+  // debounce rapid re-renders on every keystroke slightly to keep typing smooth,
+  // but still feel instant for the "auto-update remaining targets" requirement.
+  var renderPending = false;
+  function renderPreserving(){
+    if(renderPending) return;
+    renderPending = true;
+    requestAnimationFrame(function(){ renderPending = false; render(); });
+  }
+
+  function closestSemId(el){
+    var node = el.closest('.semester');
+    return node ? node.dataset.semId : null;
+  }
+  function closestSubId(el){
+    var node = el.closest('.subject');
+    return node ? node.dataset.subId : null;
+  }
+
+  root.addEventListener('click', function(e){
+    var t = e.target.closest('[data-action]');
+    if(!t) return;
+    var action = t.dataset.action;
+    if(action === 'add-semester') addSemester();
+    else if(action === 'remove-semester') { if(confirm('Remove this semester and all its subjects?')) removeSemester(t.dataset.semId); }
+    else if(action === 'add-subject') addSubject(t.dataset.semId);
+    else if(action === 'remove-subject') { if(confirm('Remove this subject?')) removeSubject(closestSemId(t), t.dataset.subId); }
+    else if(action === 'add-assess') addAssessment(closestSemId(t), t.dataset.subId);
+    else if(action === 'remove-assess') removeAssessment(closestSemId(t), closestSubId(t), t.dataset.aId);
+    else if(action === 'toggle-collapse'){ collapsedSemesters[t.dataset.semId] = !collapsedSemesters[t.dataset.semId]; render(); }
+    else if(action === 'set-goal-type'){
+      state.goalType = (state.goalType === t.dataset.goaltype) ? null : t.dataset.goaltype;
+      persist(); render();
+    }
+    else if(action === 'clear-goal'){ state.goalType = null; state.goalValue = null; persist(); render(); }
+    else if(action === 'add-scale-row'){ gradeScale.push({ min: 0, points: 0, label: 'New' }); scaleCustomized = true; persistScale(); render(); }
+    else if(action === 'remove-scale-row'){ gradeScale.splice(Number(t.dataset.scaleIdx),1); scaleCustomized = true; persistScale(); render(); }
+    else if(action === 'set-gpa-scale'){
+      var newScale = t.dataset.scale;
+      if(newScale !== state.gpaScaleType){
+        state.gpaScaleType = newScale;
+        if(!scaleCustomized){
+          gradeScale = (newScale === '4' ? SCALE_4 : SCALE_7).slice();
+        }
+        persist(); persistScale(); render();
+      }
+    }
+    else if(action === 'reset-all'){
+      if(confirm('This will permanently delete all semesters, subjects, and assessments. Continue?')){
+        state.semesters = [];
+        persist();
+        window.storage.delete(STORAGE_KEY, false).catch(function(){});
+        render();
+      }
+    }
+  });
+
+  loadAll();
+})();
+</script>
+</body>
+</html>
