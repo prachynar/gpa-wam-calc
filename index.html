@@ -392,9 +392,6 @@ button:focus-visible, input:focus-visible{
       gradeScale = state.gpaScaleType === '4' ? SCALE_4.slice() : SCALE_7.slice();
     }
 
-    if(state.semesters.length === 0){
-      seedExample();
-    }
     loaded = true;
     render();
   }
