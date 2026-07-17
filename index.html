@@ -340,7 +340,7 @@ button:focus-visible, input:focus-visible{
     mode: 'current',
     goalType: null,  // null | 'wam' | 'gpa'
     goalValue: null,
-    gpaScaleType: null // '7' | '4'
+    gpaScaleType: '4' // '7' | '4'
   };
   var SCALE_7 = [
     { min: 85, points: 7, label: 'HD' },
@@ -1007,9 +1007,12 @@ button:focus-visible, input:focus-visible{
       var newScale = t.dataset.scale;
       if(newScale !== state.gpaScaleType){
         state.gpaScaleType = newScale;
-        if(!scaleCustomized){
-          gradeScale = (newScale === '4' ? SCALE_4 : SCALE_7).slice();
+        if(newScale === '4'){
+          gradeScale = SCALE_4.slice();
+        } else {
+          gradeScale = SCALE_7.slice();
         }
+        scaleCustomized = false;
         persist(); persistScale(); render();
       }
     }
