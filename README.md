@@ -1,2 +1,3 @@
 # gpa-wam-calc
-gpa/wam calculator i built for uni
+
+gpa/wam calculator i vibe-coded for uni 
