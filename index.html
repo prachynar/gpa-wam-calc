@@ -862,31 +862,56 @@ button:focus-visible, input:focus-visible{
     var goalVal = (state.goalValue === null || state.goalValue === undefined) ? '' : state.goalValue;
     var gpaMax = state.gpaScaleType === '4' ? '4' : '7';
     var goalCardHtml = ''+
-      '<div class="stamp goal-stamp">'+
-        '<div class="stamp-label">Target</div>'+
-        '<div class="goal-controls">'+
-          '<div class="seg small">'+
-            '<button data-action="set-goal-type" data-goaltype="wam" class="'+(state.goalType==='wam'?'active':'')+'">WAM</button>'+
-            '<button data-action="set-goal-type" data-goaltype="gpa" class="'+(state.goalType==='gpa'?'active':'')+'">GPA</button>'+
-          '</div>'+
-          '<input class="txt-input wide" type="text" inputmode="decimal" placeholder="'+(state.goalType==='gpa'?'e.g. 6':'e.g. 75')+'" value="'+esc(goalVal)+'" '+
-            'data-focus-id="overall-goal" data-action="update-overall-goal"'+(state.goalType?'':' disabled')+'>'+
-          (state.goalType ? '<button class="link-btn" data-action="clear-goal">Clear</button>' : '')+
-        '</div>'+
-        '<div class="goal-req-text">'+esc(goalMessage())+'</div>'+
-      '</div>';
+  '<div class="stamp goal-stamp">'+
+    '<div class="stamp-label">Target</div>'+
+    '<div class="goal-controls">'+
+      '<div class="seg small">'+
+        '<button data-action="set-goal-type" data-goaltype="wam" class="'+
+          (state.goalType === 'wam' ? 'active' : '')+
+        '">WAM</button>'+
+
+        '<button data-action="set-goal-type" data-goaltype="gpa" class="'+
+          (state.goalType === 'gpa' ? 'active' : '')+
+        '">GPA</button>'+
+      '</div>'+
+
+      '<input class="txt-input wide" type="text" inputmode="decimal" '+
+        'placeholder="'+
+          (state.goalType === 'gpa'
+            ? (state.gpaScaleType === '4' ? 'e.g. 3.5' : 'e.g. 6')
+            : 'e.g. 75'
+          )+
+        '" '+
+        'value="'+esc(goalVal)+'" '+
+        'data-focus-id="overall-goal" '+
+        'data-action="update-overall-goal"'+
+        (state.goalType ? '' : ' disabled')+
+      '>'+
+
+      (state.goalType
+        ? '<button class="link-btn" data-action="clear-goal">Clear</button>'
+        : '')+
+
+    '</div>'+
+    '<div class="goal-req-text">'+esc(goalMessage())+'</div>'+
+  '</div>';
 
     var scaleCardHtml = ''+
-      '<div class="stamp scale-stamp">'+
-        '<div class="stamp-label">GPA scale</div>'+
-        '<div class="goal-controls">'+
-          '<div class="seg small">'+
-            '<button data-action="set-gpa-scale" data-scale="7" class="'+(state.gpaScaleType==='7'?'active':'')+'">Out of 7</button>'+
-            '<button data-action="set-gpa-scale" data-scale="4" class="'+(state.gpaScaleType==='4'?'active':'')+'">Out of 4</button>'+
-          '</div>'+
-        '</div>'+
-        '<div class="goal-req-text">Choose the scale your university reports GPA on.</div>'+
-      '</div>';
+  '<div class="stamp scale-stamp">'+
+    '<div class="stamp-label">GPA scale</div>'+
+    '<div class="goal-controls">'+
+      '<div class="seg small">'+
+        '<button data-action="set-gpa-scale" data-scale="7" class="'+
+          (state.gpaScaleType === '7' ? 'active' : '')+
+        '">Out of 7</button>'+
+
+        '<button data-action="set-gpa-scale" data-scale="4" class="'+
+          (state.gpaScaleType === '4' ? 'active' : '')+
+        '">Out of 4</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="goal-req-text">Choose your GPA scale first, then set your target.</div>'+
+  '</div>';
 
     var html = ''+
     '<header class="masthead">'+
@@ -898,8 +923,8 @@ button:focus-visible, input:focus-visible{
       '<div class="summary">'+
         '<div class="stamp"><div class="stamp-label">Overall WAM</div><div class="stamp-value">'+fmt(overall.wam,1)+'<small> / 100</small></div></div>'+
         '<div class="stamp"><div class="stamp-label">Overall GPA</div><div class="stamp-value">'+fmt(overall.gpa,2)+'<small> / '+gpaMax+'</small></div></div>'+
-        goalCardHtml+
         scaleCardHtml+
+        goalCardHtml+
       '</div>'+
     '</header>'+
     semestersHtml+
